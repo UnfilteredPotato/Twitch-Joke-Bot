@@ -3,148 +3,770 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard - Twitch Joke Bot</title>
+  <title>GiggleByte Dashboard</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css">
+  <style>
+    :root {
+      --pink: #ff66c4;
+      --purple: #8a4bf5;
+      --blue: #66d9ff;
+      --light-purple: #f0e6ff;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: var(--light-purple);
+      color: #333;
+    }
+    
+    .navbar {
+      background: linear-gradient(90deg, var(--pink), var(--purple), var(--blue));
+    }
+    
+    .card {
+      border-radius: 15px;
+      border: none;
+      box-shadow: 0 6px 15px rgba(138, 75, 245, 0.15);
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+    
+    .card-header {
+      background: white;
+      border-bottom: 1px solid rgba(138, 75, 245, 0.2);
+      font-weight: 600;
+      color: var(--purple);
+    }
+    
+    .gradient-text {
+      background: linear-gradient(45deg, var(--pink), var(--purple), var(--blue));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      font-weight: bold;
+    }
+    
+    .btn-primary {
+      background: var(--purple);
+      border-color: var(--purple);
+      box-shadow: 0 4px 10px rgba(138, 75, 245, 0.3);
+      transition: all 0.2s;
+    }
+    
+    .btn-primary:hover {
+      background: #7c3ade;
+      border-color: #7c3ade;
+      transform: translateY(-2px);
+    }
+    
+    .btn-outline-primary {
+      color: var(--purple);
+      border-color: var(--purple);
+    }
+    
+    .btn-outline-primary:hover {
+      background-color: var(--purple);
+      border-color: var(--purple);
+    }
+    
+    .form-check-input:checked {
+      background-color: var(--purple);
+      border-color: var(--purple);
+    }
+    
+    .form-range::-webkit-slider-thumb {
+      background: var(--purple);
+    }
+    
+    .status-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 6px;
+    }
+    
+    .status-dot.active {
+      background-color: #2ecc71;
+      box-shadow: 0 0 8px rgba(46, 204, 113, 0.5);
+    }
+    
+    .status-dot.inactive {
+      background-color: #e74c3c;
+      box-shadow: 0 0 8px rgba(231, 76, 60, 0.5);
+    }
+    
+    .command-item {
+      background-color: white;
+      border-radius: 10px;
+      padding: 15px;
+      margin-bottom: 10px;
+      border-left: 4px solid var(--purple);
+      transition: all 0.2s;
+    }
+    
+    .command-item:hover {
+      box-shadow: 0 5px 15px rgba(138, 75, 245, 0.2);
+      transform: translateY(-2px);
+    }
+    
+    .command-name {
+      font-weight: 600;
+      color: var(--purple);
+    }
+    
+    .command-response {
+      color: #666;
+      font-size: 0.9rem;
+    }
+    
+    .joke-category-card {
+      border-radius: 10px;
+      border: 2px solid transparent;
+      padding: 15px;
+      text-align: center;
+      background-color: white;
+      transition: all 0.2s;
+      height: 100%;
+    }
+    
+    .joke-category-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 15px rgba(138, 75, 245, 0.2);
+    }
+    
+    .joke-category-card.selected {
+      border-color: var(--purple);
+      background-color: rgba(138, 75, 245, 0.05);
+    }
+    
+    .category-icon {
+      font-size: 2rem;
+      margin-bottom: 10px;
+      color: var(--purple);
+    }
+    
+    .bot-footer {
+      background: linear-gradient(90deg, var(--pink), var(--purple), var(--blue));
+      color: white;
+      padding: 10px 0;
+    }
+    
+    .loader {
+      width: 24px;
+      height: 24px;
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid var(--purple);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      display: inline-block;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    /* Toast notification */
+    .toast-container {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 1050;
+    }
+    
+    .toast {
+      background-color: white;
+      border-left: 4px solid var(--purple);
+    }
+  </style>
 </head>
 <body>
-  <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+  <nav class="navbar navbar-dark navbar-expand-lg">
     <div class="container">
-      <a class="navbar-brand" href="/">Twitch Joke Bot</a>
-      <div class="d-flex">
-        <span class="navbar-text me-3" id="username-display"></span>
-        <a href="/logout" class="btn btn-outline-light btn-sm">Logout</a>
+      <a class="navbar-brand" href="/">
+        <span style="font-size: 1.5rem; font-weight: bold;">🤖 GiggleByte</span>
+      </a>
+      <div class="d-flex align-items-center">
+        <span class="navbar-text me-3 d-none d-md-inline" id="username-display" style="color: white;"></span>
+        <a href="/logout" class="btn btn-sm btn-light">Log out</a>
       </div>
     </div>
   </nav>
 
-  <div class="container mt-4">
+  <div class="container my-4">
     <div class="row">
+      <div class="col-12 mb-4 text-center">
+        <h1 class="display-5 gradient-text">GiggleByte Dashboard</h1>
+        <p class="lead">Configure your Twitch joke bot and make your viewers laugh!</p>
+      </div>
+    </div>
+
+    <div class="row mb-4">
       <div class="col-md-4">
-        <div class="card mb-4">
-          <div class="card-header">
-            <h5 class="card-title mb-0">Bot Status</h5>
-          </div>
-          <div class="card-body">
-            <div class="form-check form-switch">
+        <div class="card h-100">
+          <div class="card-header">Bot Status</div>
+          <div class="card-body d-flex flex-column">
+            <div class="form-check form-switch mb-3">
               <input class="form-check-input" type="checkbox" id="botEnabled">
-              <label class="form-check-label" for="botEnabled">Enable Joke Bot</label>
+              <label class="form-check-label" for="botEnabled">Enable GiggleByte</label>
             </div>
-            <div id="status-indicator" class="mt-3">
-              <div class="d-flex align-items-center">
-                <div class="status-dot"></div>
-                <span class="ms-2" id="status-text">Loading...</span>
-              </div>
+            
+            <div id="status-indicator" class="mb-3">
+              <span class="status-dot inactive" id="status-dot"></span>
+              <span id="status-text">Loading...</span>
             </div>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="card-header">
-            <h5 class="card-title mb-0">Joke Settings</h5>
-          </div>
-          <div class="card-body">
-            <div class="mb-3">
-              <label for="jokeFrequency" class="form-label">Auto-post joke every</label>
-              <div class="input-group">
-                <input type="number" class="form-control" id="jokeFrequency" min="1" max="60">
-                <span class="input-group-text">minutes</span>
-              </div>
-              <div class="form-text">Set to higher values for less frequent jokes</div>
-            </div>
-
-            <div class="mb-3">
-              <label class="form-label">Joke Categories</label>
-              <div class="form-check">
-                <input class="form-check-input category-checkbox" type="checkbox" value="general" id="categoryGeneral">
-                <label class="form-check-label" for="categoryGeneral">General</label>
-              </div>
-              <div class="form-check">
-                <input class="form-check-input category-checkbox" type="checkbox" value="programming" id="categoryProgramming">
-                <label class="form-check-label" for="categoryProgramming">Programming</label>
-              </div>
-              <div class="form-check">
-                <input class="form-check-input category-checkbox" type="checkbox" value="pun" id="categoryPun">
-                <label class="form-check-label" for="categoryPun">Puns</label>
-              </div>
-              <div class="form-check">
-                <input class="form-check-input category-checkbox" type="checkbox" value="spooky" id="categorySpooky">
-                <label class="form-check-label" for="categorySpooky">Spooky</label>
+            
+            <div class="mt-auto">
+              <div class="d-grid gap-2">
+                <button class="btn btn-primary" id="saveSettingsBtn">
+                  <span id="saveButtonText">Save Settings</span>
+                  <span id="saveButtonLoader" class="loader d-none"></span>
+                </button>
               </div>
             </div>
           </div>
         </div>
       </div>
-
+      
       <div class="col-md-8">
-        <div class="card">
-          <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="card-title mb-0">Custom Commands</h5>
-            <button class="btn btn-sm btn-primary" id="addCommandBtn">Add Command</button>
-          </div>
+        <div class="card h-100">
+          <div class="card-header">Joke Frequency</div>
           <div class="card-body">
-            <div id="commandsList">
-              <!-- Commands will be added here dynamically -->
-              <div class="text-center py-4 text-muted" id="noCommandsMessage">
-                No custom commands yet. Add one to get started!
+            <p>How often should GiggleByte automatically post jokes in your chat?</p>
+            
+            <label for="jokeFrequency" class="form-label d-flex justify-content-between">
+              <span>Every <span id="frequencyValue">10</span> minutes</span>
+              <span class="text-muted">More frequent ↔ Less frequent</span>
+            </label>
+            <input type="range" class="form-range" min="1" max="60" value="10" id="jokeFrequency">
+            
+            <div class="row mt-4">
+              <div class="col-md-4 text-center">
+                <div class="border rounded p-2 mb-2 bg-light">
+                  <strong>Every 5 min</strong>
+                  <div class="small text-muted">12 jokes per hour</div>
+                </div>
+              </div>
+              <div class="col-md-4 text-center">
+                <div class="border rounded p-2 mb-2 bg-light">
+                  <strong>Every 10 min</strong>
+                  <div class="small text-muted">6 jokes per hour</div>
+                </div>
+              </div>
+              <div class="col-md-4 text-center">
+                <div class="border rounded p-2 mb-2 bg-light">
+                  <strong>Every 30 min</strong>
+                  <div class="small text-muted">2 jokes per hour</div>
+                </div>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+    </div>
 
-            <div class="modal fade" id="commandModal" tabindex="-1">
-              <div class="modal-dialog">
-                <div class="modal-content">
-                  <div class="modal-header">
-                    <h5 class="modal-title">Add Custom Command</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    <div class="row mb-4">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header">Joke Categories</div>
+          <div class="card-body">
+            <p>Select the types of jokes you want GiggleByte to share:</p>
+            
+            <div class="row row-cols-1 row-cols-md-3 g-4 mb-3" id="jokeCategoriesContainer">
+              <div class="col">
+                <div class="joke-category-card selected" data-category="general">
+                  <div class="category-icon">😄</div>
+                  <h5>General</h5>
+                  <p class="text-muted">Classic jokes for everyone</p>
+                  <div class="form-check">
+                    <input class="form-check-input category-checkbox" type="checkbox" value="general" id="categoryGeneral" checked>
+                    <label class="form-check-label" for="categoryGeneral">Include general jokes</label>
                   </div>
-                  <div class="modal-body">
-                    <div class="mb-3">
-                      <label for="commandName" class="form-label">Command (without !)</label>
-                      <input type="text" class="form-control" id="commandName" placeholder="Example: hello">
-                    </div>
-                    <div class="mb-3">
-                      <label for="commandResponse" class="form-label">Bot Response</label>
-                      <textarea class="form-control" id="commandResponse" rows="3" placeholder="Example: Hello @{user}! Welcome to the stream!"></textarea>
-                    </div>
+                </div>
+              </div>
+              
+              <div class="col">
+                <div class="joke-category-card" data-category="programming">
+                  <div class="category-icon">💻</div>
+                  <h5>Programming</h5>
+                  <p class="text-muted">For the coding nerds</p>
+                  <div class="form-check">
+                    <input class="form-check-input category-checkbox" type="checkbox" value="programming" id="categoryProgramming">
+                    <label class="form-check-label" for="categoryProgramming">Include programming jokes</label>
                   </div>
-                  <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary" id="saveCommandBtn">Save Command</button>
+                </div>
+              </div>
+              
+              <div class="col">
+                <div class="joke-category-card" data-category="pun">
+                  <div class="category-icon">🤪</div>
+                  <h5>Puns</h5>
+                  <p class="text-muted">Word play and groan-worthy jokes</p>
+                  <div class="form-check">
+                    <input class="form-check-input category-checkbox" type="checkbox" value="pun" id="categoryPun">
+                    <label class="form-check-label" for="categoryPun">Include puns</label>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="col">
+                <div class="joke-category-card" data-category="spooky">
+                  <div class="category-icon">👻</div>
+                  <h5>Spooky</h5>
+                  <p class="text-muted">Jokes with a Halloween theme</p>
+                  <div class="form-check">
+                    <input class="form-check-input category-checkbox" type="checkbox" value="spooky" id="categorySpooky">
+                    <label class="form-check-label" for="categorySpooky">Include spooky jokes</label>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="col">
+                <div class="joke-category-card" data-category="christmas">
+                  <div class="category-icon">🎄</div>
+                  <h5>Christmas</h5>
+                  <p class="text-muted">Holiday-themed jokes</p>
+                  <div class="form-check">
+                    <input class="form-check-input category-checkbox" type="checkbox" value="christmas" id="categoryChristmas">
+                    <label class="form-check-label" for="categoryChristmas">Include Christmas jokes</label>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="col">
+                <div class="joke-category-card" data-category="misc">
+                  <div class="category-icon">🎭</div>
+                  <h5>Miscellaneous</h5>
+                  <p class="text-muted">A mix of random jokes</p>
+                  <div class="form-check">
+                    <input class="form-check-input category-checkbox" type="checkbox" value="misc" id="categoryMisc">
+                    <label class="form-check-label" for="categoryMisc">Include misc jokes</label>
                   </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
+      </div>
+    </div>
 
-        <div class="card mt-4">
-          <div class="card-header">
-            <h5 class="card-title mb-0">How to Use</h5>
+    <div class="row mb-4">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <span>Custom Commands</span>
+            <button class="btn btn-sm btn-primary" id="addCommandBtn">Add Command</button>
           </div>
           <div class="card-body">
-            <p>Your viewers can use these commands in your Twitch chat:</p>
-            <ul>
-              <li><strong>!joke</strong> - Posts a random joke from your selected categories</li>
-              <li>Custom commands you create above</li>
-            </ul>
-            <p>The bot will also automatically post jokes based on your frequency setting.</p>
-            <div class="alert alert-info">
-              <strong>Tip:</strong> Make sure your bot is enabled when you're streaming!
+            <p>Create custom commands for your viewers to use:</p>
+            
+            <div id="commandsList">
+              <div class="text-center py-4 text-muted" id="noCommandsMessage">
+                No custom commands yet. Add one to get started!
+              </div>
             </div>
           </div>
         </div>
+      </div>
+    </div>
 
-        <div class="d-grid mt-4">
-          <button class="btn btn-primary" id="saveSettingsBtn">Save Settings</button>
+    <div class="row mb-4">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header">Try a Sample Joke</div>
+          <div class="card-body">
+            <p>Click the button below to generate a random joke from your selected categories:</p>
+            <div class="d-grid gap-2 col-md-6 mx-auto">
+              <button class="btn btn-primary" id="testJokeBtn">Generate Sample Joke</button>
+            </div>
+            <div class="mt-3 p-3 border rounded bg-light d-none" id="sampleJokeContainer">
+              <p class="mb-0" id="sampleJokeText"></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row mb-4">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header">Help & Information</div>
+          <div class="card-body">
+            <h5>How to Use GiggleByte</h5>
+            <p>Your viewers can use these commands in your Twitch chat:</p>
+            <ul>
+              <li><strong>!joke</strong> - Posts a random joke from your selected categories</li>
+              <li>Any custom commands you create above</li>
+            </ul>
+            
+            <h5 class="mt-4">About GiggleByte</h5>
+            <p>GiggleByte is a Twitch chatbot that automatically posts jokes in your channel. You can customize the joke categories, how often jokes are posted, and even create your own custom commands.</p>
+            
+            <div class="alert alert-info">
+              <strong>Tip:</strong> Make sure GiggleByte is enabled when you're streaming for the best experience!
+            </div>
+          </div>
         </div>
       </div>
     </div>
   </div>
 
-  <footer class="mt-5 py-3 text-center text-muted">
-    <div class="container">
-      <p>Not affiliated with Twitch. Jokes provided by JokeAPI.</p>
+  <footer class="bot-footer mt-5">
+    <div class="container text-center py-3">
+      <p class="mb-0">GiggleByte - Bringing laughter to your Twitch streams!</p>
+      <p class="small mb-0">Jokes provided by JokeAPI. Not affiliated with Twitch.</p>
     </div>
   </footer>
 
-  <script src="https://cdn.jsd
+  <!-- Modal for adding/editing commands -->
+  <div class="modal fade" id="commandModal" tabindex="-1" aria-labelledby="commandModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="commandModalLabel">Add Custom Command</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="commandName" class="form-label">Command (without !)</label>
+            <input type="text" class="form-control" id="commandName" placeholder="Example: hello">
+            <div class="form-text">Viewers will type !commandname in chat to trigger this command.</div>
+          </div>
+          <div class="mb-3">
+            <label for="commandResponse" class="form-label">Bot Response</label>
+            <textarea class="form-control" id="commandResponse" rows="3" placeholder="Example: Hello @{user}! Welcome to the stream!"></textarea>
+            <div class="form-text">What GiggleByte will say when the command is used.</div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" id="saveCommandBtn">Save Command</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast notification -->
+  <div class="toast-container">
+    <div class="toast" role="alert" aria-live="assertive" aria-atomic="true" id="notificationToast">
+      <div class="toast-header">
+        <strong class="me-auto" id="toastTitle">Notification</strong>
+        <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+      </div>
+      <div class="toast-body" id="toastMessage">
+        Settings saved successfully!
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Bootstrap components
+      const commandModal = new bootstrap.Modal(document.getElementById('commandModal'));
+      const notificationToast = new bootstrap.Toast(document.getElementById('notificationToast'));
+      
+      // Variables
+      let userData = null;
+      let editing = null;
+      
+      // Elements
+      const botEnabled = document.getElementById('botEnabled');
+      const jokeFrequency = document.getElementById('jokeFrequency');
+      const frequencyValue = document.getElementById('frequencyValue');
+      const statusDot = document.getElementById('status-dot');
+      const statusText = document.getElementById('status-text');
+      const saveSettingsBtn = document.getElementById('saveSettingsBtn');
+      const saveButtonText = document.getElementById('saveButtonText');
+      const saveButtonLoader = document.getElementById('saveButtonLoader');
+      const categoryCards = document.querySelectorAll('.joke-category-card');
+      const categoryCheckboxes = document.querySelectorAll('.category-checkbox');
+      
+      // Event listeners
+      document.getElementById('addCommandBtn').addEventListener('click', () => {
+        document.getElementById('commandName').value = '';
+        document.getElementById('commandResponse').value = '';
+        document.getElementById('commandModalLabel').textContent = 'Add Custom Command';
+        editing = null;
+        commandModal.show();
+      });
+      
+      document.getElementById('saveCommandBtn').addEventListener('click', saveCommand);
+      saveSettingsBtn.addEventListener('click', saveSettings);
+      
+      document.getElementById('testJokeBtn').addEventListener('click', generateSampleJoke);
+      
+      // Update frequency value display when slider changes
+      jokeFrequency.addEventListener('input', () => {
+        frequencyValue.textContent = jokeFrequency.value;
+      });
+      
+      // Toggle category selection when cards are clicked
+      categoryCards.forEach(card => {
+        card.addEventListener('click', () => {
+          const category = card.dataset.category;
+          const checkbox = document.getElementById('category' + category.charAt(0).toUpperCase() + category.slice(1));
+          checkbox.checked = !checkbox.checked;
+          updateCategoryCardSelection(card, checkbox.checked);
+        });
+      });
+      
+      // Update card selection when checkboxes are clicked
+      categoryCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', () => {
+          const category = checkbox.value;
+          const card = document.querySelector(`.joke-category-card[data-category="${category}"]`);
+          updateCategoryCardSelection(card, checkbox.checked);
+        });
+      });
+      
+      // Functions
+      function updateCategoryCardSelection(card, isSelected) {
+        if (isSelected) {
+          card.classList.add('selected');
+        } else {
+          card.classList.remove('selected');
+        }
+      }
+      
+      function fetchUserData() {
+        // Show loading state
+        statusText.textContent = 'Loading...';
+        
+        fetch('/api/user')
+          .then(response => response.json())
+          .then(data => {
+            userData = data;
+            updateUI();
+          })
+          .catch(error => {
+            console.error('Error fetching user data:', error);
+            showNotification('Error', 'Could not load user data. Please refresh the page.', 'error');
+          });
+      }
+      
+      function updateUI() {
+        if (!userData) return;
+        
+        // Update username display
+        document.getElementById('username-display').textContent = userData.username;
+        
+        // Update bot status
+        botEnabled.checked = userData.botEnabled;
+        updateStatusIndicator(userData.botEnabled);
+        
+        // Update joke frequency
+        jokeFrequency.value = userData.jokeFrequency;
+        frequencyValue.textContent = userData.jokeFrequency;
+        
+        // Update categories
+        categoryCheckboxes.forEach(checkbox => {
+          const isChecked = userData.jokeCategories.includes(checkbox.value);
+          checkbox.checked = isChecked;
+          
+          const card = document.querySelector(`.joke-category-card[data-category="${checkbox.value}"]`);
+          if (card) {
+            updateCategoryCardSelection(card, isChecked);
+          }
+        });
+        
+        // Update commands list
+        renderCommands();
+      }
+      
+      function updateStatusIndicator(isActive) {
+        if (isActive) {
+          statusDot.classList.remove('inactive');
+          statusDot.classList.add('active');
+          statusText.textContent = 'GiggleByte is active';
+        } else {
+          statusDot.classList.remove('active');
+          statusDot.classList.add('inactive');
+          statusText.textContent = 'GiggleByte is disabled';
+        }
+      }
+      
+      function renderCommands() {
+        const commandsList = document.getElementById('commandsList');
+        const noCommandsMessage = document.getElementById('noCommandsMessage');
+        
+        // Clear existing commands
+        commandsList.innerHTML = '';
+        
+        if (!userData.customCommands || userData.customCommands.length === 0) {
+          commandsList.appendChild(noCommandsMessage);
+          return;
+        }
+        
+        // Add each command to the list
+        userData.customCommands.forEach(([command, response]) => {
+          const commandItem = document.createElement('div');
+          commandItem.className = 'command-item';
+          commandItem.innerHTML = `
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <div class="command-name">!${command}</div>
+                <div class="command-response">${response}</div>
+              </div>
+              <div>
+                <button class="btn btn-sm btn-outline-primary edit-btn me-2" data-command="${command}">Edit</button>
+                <button class="btn btn-sm btn-outline-danger delete-btn" data-command="${command}">Delete</button>
+              </div>
+            </div>
+          `;
+          commandsList.appendChild(commandItem);
+        });
+        
+        // Add event listeners to edit and delete buttons
+        document.querySelectorAll('.edit-btn').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const command = e.target.dataset.command;
+            const response = userData.customCommands.find(([cmd]) => cmd === command)[1];
+            
+            document.getElementById('commandName').value = command;
+            document.getElementById('commandResponse').value = response;
+            document.getElementById('commandModalLabel').textContent = 'Edit Custom Command';
+            editing = command;
+            
+            commandModal.show();
+          });
+        });
+        
+        document.querySelectorAll('.delete-btn').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const command = e.target.dataset.command;
+            
+            if (confirm(`Are you sure you want to delete the command !${command}?`)) {
+              userData.customCommands = userData.customCommands.filter(([cmd]) => cmd !== command);
+              renderCommands();
+              saveSettings();
+            }
+          });
+        });
+      }
+      
+      function saveCommand() {
+        const commandName = document.getElementById('commandName').value.trim().toLowerCase();
+        const commandResponse = document.getElementById('commandResponse').value.trim();
+        
+        if (!commandName || !commandResponse) {
+          showNotification('Error', 'Both command and response are required!', 'error');
+          return;
+        }
+        
+        // If editing, remove the old command
+        if (editing) {
+          userData.customCommands = userData.customCommands.filter(([cmd]) => cmd !== editing);
+        }
+        
+        // Add new command
+        if (!userData.customCommands) {
+          userData.customCommands = [];
+        }
+        
+        userData.customCommands.push([commandName, commandResponse]);
+        
+        // Close modal and update UI
+        commandModal.hide();
+        renderCommands();
+        
+        // Save settings to server
+        saveSettings();
+      }
+      
+      function saveSettings() {
+        // Show loading state
+        saveButtonText.classList.add('d-none');
+        saveButtonLoader.classList.remove('d-none');
+        saveSettingsBtn.disabled = true;
+        
+        // Get bot enabled status
+        const botEnabledValue = botEnabled.checked;
+        
+        // Get joke frequency
+        const jokeFrequencyValue = parseInt(jokeFrequency.value);
+        
+        // Get selected categories
+        const jokeCategories = [];
+        document.querySelectorAll('.category-checkbox:checked').forEach(checkbox => {
+          jokeCategories.push(checkbox.value);
+        });
+        
+        // Validate
+        if (jokeCategories.length === 0) {
+          showNotification('Error', 'Please select at least one joke category.', 'error');
+          saveButtonText.classList.remove('d-none');
+          saveButtonLoader.classList.add('d-none');
+          saveSettingsBtn.disabled = false;
+          return;
+        }
+        
+        if (isNaN(jokeFrequencyValue) || jokeFrequencyValue < 1 || jokeFrequencyValue > 60) {
+          showNotification('Error', 'Please enter a valid joke frequency between 1 and 60 minutes.', 'error');
+          saveButtonText.classList.remove('d-none');
+          saveButtonLoader.classList.add('d-none');
+          saveSettingsBtn.disabled = false;
+          return;
+        }
+        
+        // Update user data
+        userData.botEnabled = botEnabledValue;
+        userData.jokeFrequency = jokeFrequencyValue;
+        userData.jokeCategories = jokeCategories;
+        
+        // Send to server
+        fetch('/api/settings', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(userData)
+        })
+        .then(response => response.json())
+        .then(data => {
+          // Reset button state
+          saveButtonText.classList.remove('d-none');
+          saveButtonLoader.classList.add('d-none');
+          saveSettingsBtn.disabled = false;
+          
+          if (data.success) {
+            updateStatusIndicator(botEnabledValue);
+            showNotification('Success', 'Settings saved successfully!', 'success');
+          } else {
+            showNotification('Error', 'Error saving settings. Please try again.', 'error');
+          }
+        })
+        .catch(error => {
+          console.error('Error saving settings:', error);
+          saveButtonText.classList.remove('d-none');
+          saveButtonLoader.classList.add('d-none');
+          saveSettingsBtn.disabled = false;
+          showNotification('Error', 'Error saving settings. Please try again.', 'error');
+        });
+      }
+      
+      function generateSampleJoke() {
+        const jokeContainer = document.getElementById('sampleJokeContainer');
+        const jokeText = document.getElementById('sampleJokeText');
+        
+        // Get selected categories
+        const selectedCategories = [];
+        document.querySelectorAll('.category-checkbox:checked').forEach(checkbox => {
+          selectedCategories.push(checkbox.value);
+        });
+        
+        if (selectedCategories.length === 0) {
+          showNotification('Error', 'Please select at least one joke category.', 'error');
+          return;
+        }
+        
+        // Show loading
+        jokeText.textContent = 'Loading joke...';
+        jokeContainer.classList.remove('d-none');
+        
+        // Select a random category from the selected ones
+        const randomCategory = selectedCategories[Math.floor(Math.random() * selectedCategories.length)];
+        
+        // Fetch a joke from the API
+        fetch(`https://v2.jokeapi.dev/joke/${randomCategory}?black
