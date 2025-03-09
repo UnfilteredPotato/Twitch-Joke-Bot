@@ -6,11 +6,14 @@ const OAuth2Strategy = require('passport-oauth2');
 const tmi = require('tmi.js');
 const axios = require('axios');
 const mongoose = require('mongoose');
+const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 // MongoDB connection
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost/twitchjokebot');
+mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost/twitchjokebot')
+  .then(() => console.log('Connected to MongoDB'))
+  .catch(err => console.error('MongoDB connection error:', err));
 
 // User model
 const User = mongoose.model('User', {
@@ -40,7 +43,11 @@ app.use(passport.session());
 
 passport.serializeUser((user, done) => done(null, user.id));
 passport.deserializeUser((id, done) => {
-  User.findById(id, (err, user) => done(err, user));
+  User.findById(id).then(user => {
+    done(null, user);
+  }).catch(err => {
+    done(err, null);
+  });
 });
 
 // Twitch OAuth2 Strategy
@@ -52,42 +59,54 @@ passport.use(new OAuth2Strategy({
   callbackURL: process.env.CALLBACK_URL || 'http://localhost:3000/auth/twitch/callback',
   scope: 'chat:read chat:edit channel:moderate'
 }, async (accessToken, refreshToken, profile, done) => {
-  // Get user info from Twitch API
-  const userInfo = await axios.get('https://api.twitch.tv/helix/users', {
-    headers: {
-      'Client-ID': process.env.TWITCH_CLIENT_ID,
-      'Authorization': `Bearer ${accessToken}`
-    }
-  });
-  
-  const twitchId = userInfo.data.data[0].id;
-  const username = userInfo.data.data[0].login;
-  
-  // Find or create user
-  let user = await User.findOne({ twitchId });
-  if (!user) {
-    user = new User({
-      twitchId,
-      username,
-      accessToken,
-      refreshToken
+  try {
+    // Get user info from Twitch API
+    const userInfo = await axios.get('https://api.twitch.tv/helix/users', {
+      headers: {
+        'Client-ID': process.env.TWITCH_CLIENT_ID,
+        'Authorization': `Bearer ${accessToken}`
+      }
     });
-  } else {
-    user.accessToken = accessToken;
-    user.refreshToken = refreshToken;
+    
+    const twitchId = userInfo.data.data[0].id;
+    const username = userInfo.data.data[0].login;
+    
+    // Find or create user
+    let user = await User.findOne({ twitchId });
+    if (!user) {
+      user = new User({
+        twitchId,
+        username,
+        accessToken,
+        refreshToken
+      });
+    } else {
+      user.accessToken = accessToken;
+      user.refreshToken = refreshToken;
+    }
+    
+    await user.save();
+    return done(null, user);
+  } catch (error) {
+    console.error('OAuth error:', error);
+    return done(error);
   }
-  
-  await user.save();
-  return done(null, user);
 }));
 
-// Static files
-app.use(express.static('public'));
+// Serve static files from the public directory
+app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
+
+// Log the current directory and files for debugging
+console.log('Current directory:', __dirname);
+console.log('Files in public:', require('fs').existsSync(path.join(__dirname, 'public')));
 
 // Routes
 app.get('/', (req, res) => {
-  res.sendFile(__dirname + '/public/index.html');
+  // Use path.join for cross-platform compatibility
+  const indexPath = path.join(__dirname, 'public', 'index.html');
+  console.log('Serving index from:', indexPath);
+  res.sendFile(indexPath);
 });
 
 // Auth routes
@@ -98,7 +117,9 @@ app.get('/auth/twitch/callback',
 );
 
 app.get('/dashboard', ensureAuthenticated, (req, res) => {
-  res.sendFile(__dirname + '/public/dashboard.html');
+  const dashboardPath = path.join(__dirname, 'public', 'dashboard.html');
+  console.log('Serving dashboard from:', dashboardPath);
+  res.sendFile(dashboardPath);
 });
 
 app.get('/api/user', ensureAuthenticated, (req, res) => {
@@ -133,8 +154,10 @@ app.post('/api/settings', ensureAuthenticated, async (req, res) => {
 });
 
 app.get('/logout', (req, res) => {
-  req.logout();
-  res.redirect('/');
+  req.logout(function(err) {
+    if (err) { return next(err); }
+    res.redirect('/');
+  });
 });
 
 // Joke API
@@ -148,6 +171,7 @@ async function getRandomJoke(categories) {
       return `${response.data.setup} ... ${response.data.delivery}`;
     }
   } catch (error) {
+    console.error('Error fetching joke:', error);
     return "Why did the chicken cross the road? To get to the other side!";
   }
 }
