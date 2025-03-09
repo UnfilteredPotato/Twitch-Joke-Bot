@@ -7,14 +7,13 @@ const tmi = require('tmi.js');
 const axios = require('axios');
 const mongoose = require('mongoose');
 const fs = require('fs');
+const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Log the current directory and files for debugging
 console.log('Current directory:', process.cwd());
 console.log('Files in root:', fs.readdirSync('.'));
-console.log('Files in src:', fs.existsSync('./src') ? fs.readdirSync('./src') : 'src folder not found');
-console.log('Files in src/public:', fs.existsSync('./src/public') ? fs.readdirSync('./src/public') : 'src/public folder not found');
 
 // MongoDB connection
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost/twitchjokebot')
@@ -99,25 +98,34 @@ passport.use(new OAuth2Strategy({
   }
 }));
 
-// Serve static files
-app.use(express.static('src/public'));
+// Serve static files - First try to serve from src directory
+app.use(express.static(path.join(__dirname)));
 app.use(express.json());
 
 // Debug route to check file system
 app.get('/debug', (req, res) => {
   const currentDir = process.cwd();
   const files = fs.readdirSync(currentDir);
-  const srcExists = fs.existsSync('./src');
-  const publicExists = fs.existsSync('./src/public');
+  
+  // Check various directories
+  const srcExists = fs.existsSync(path.join(currentDir, 'src'));
+  const publicExists = fs.existsSync(path.join(currentDir, 'public'));
+  const srcDirExists = fs.existsSync(__dirname);
+  
   let srcFiles = [];
   let publicFiles = [];
+  let currentDirFiles = [];
   
   if (srcExists) {
-    srcFiles = fs.readdirSync('./src');
+    srcFiles = fs.readdirSync(path.join(currentDir, 'src'));
   }
   
   if (publicExists) {
-    publicFiles = fs.readdirSync('./src/public');
+    publicFiles = fs.readdirSync(path.join(currentDir, 'public'));
+  }
+  
+  if (srcDirExists) {
+    currentDirFiles = fs.readdirSync(__dirname);
   }
   
   res.json({
@@ -126,13 +134,38 @@ app.get('/debug', (req, res) => {
     srcExists,
     srcFiles,
     publicExists,
-    publicFiles
+    publicFiles,
+    dirname: __dirname,
+    dirnameExists: srcDirExists,
+    dirnameFiles: currentDirFiles,
+    env: {
+      NODE_ENV: process.env.NODE_ENV,
+      PORT: process.env.PORT,
+      MONGODB_URI: process.env.MONGODB_URI ? 'Set (hidden for security)' : 'Not set',
+      TWITCH_CLIENT_ID: process.env.TWITCH_CLIENT_ID ? 'Set (hidden for security)' : 'Not set',
+      CALLBACK_URL: process.env.CALLBACK_URL ? 'Set (hidden for security)' : 'Not set',
+      BOT_USERNAME: process.env.BOT_USERNAME || 'Not set'
+    }
   });
 });
 
 // Routes
 app.get('/', (req, res) => {
-  res.sendFile('index.html', { root: 'src/public' });
+  // Try multiple locations to find the file
+  const possiblePaths = [
+    path.join(__dirname, 'index.html'),
+    path.join(process.cwd(), 'src', 'index.html'),
+    path.join(process.cwd(), 'public', 'index.html')
+  ];
+  
+  for (const filePath of possiblePaths) {
+    if (fs.existsSync(filePath)) {
+      console.log('Found index.html at:', filePath);
+      return res.sendFile(filePath);
+    }
+  }
+  
+  res.status(404).send('index.html not found. Please check your file structure.');
 });
 
 // Auth routes
@@ -143,7 +176,21 @@ app.get('/auth/twitch/callback',
 );
 
 app.get('/dashboard', ensureAuthenticated, (req, res) => {
-  res.sendFile('dashboard.html', { root: 'src/public' });
+  // Try multiple locations to find the file
+  const possiblePaths = [
+    path.join(__dirname, 'dashboard.html'),
+    path.join(process.cwd(), 'src', 'dashboard.html'),
+    path.join(process.cwd(), 'public', 'dashboard.html')
+  ];
+  
+  for (const filePath of possiblePaths) {
+    if (fs.existsSync(filePath)) {
+      console.log('Found dashboard.html at:', filePath);
+      return res.sendFile(filePath);
+    }
+  }
+  
+  res.status(404).send('dashboard.html not found. Please check your file structure.');
 });
 
 app.get('/api/user', ensureAuthenticated, (req, res) => {
