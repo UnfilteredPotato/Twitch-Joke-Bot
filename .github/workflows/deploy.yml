@@ -1,0 +1,14 @@
+name: Deploy to Render
+on:
+  push:
+    branches:
+      - main
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Deploy to Render
+        env:
+          BOT_USERNAME: ${{ secrets.BOT_USERNAME }}
+        run: echo "Deploying with bot username $BOT_USERNAME"
