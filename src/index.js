@@ -11,9 +11,12 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Log the current directory and files for debugging
-console.log('Current directory:', process.cwd());
-console.log('Files in root:', fs.readdirSync('.'));
+// Log current working directory and directory structure
+console.log('STARTUP: Current directory:', process.cwd());
+console.log('STARTUP: __dirname:', __dirname);
+console.log('STARTUP: Files in current directory:', fs.readdirSync(process.cwd()));
+console.log('STARTUP: Files in src directory:', fs.existsSync(path.join(process.cwd(), 'src')) ? 
+  fs.readdirSync(path.join(process.cwd(), 'src')) : 'src folder not found');
 
 // MongoDB connection
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost/twitchjokebot')
@@ -98,74 +101,112 @@ passport.use(new OAuth2Strategy({
   }
 }));
 
-// Serve static files - First try to serve from src directory
-app.use(express.static(path.join(__dirname)));
+// Create a very simple index.html and dashboard.html if they don't exist
+// This is our fallback solution
+const createHtmlFiles = () => {
+  const indexContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Twitch Joke Bot</title>
+  <style>
+    body { font-family: Arial, sans-serif; background-color: #f0e6ff; text-align: center; padding: 50px; }
+    .card { background: white; border-radius: 10px; padding: 30px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); max-width: 600px; margin: 0 auto; }
+    h1 { color: #6610f2; }
+    .btn { background-color: #8a4bf5; color: white; border: none; padding: 10px 20px; border-radius: 5px; text-decoration: none; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Twitch Joke Bot</h1>
+    <p>Let your viewers enjoy jokes without any technical setup!</p>
+    <p>Connect your Twitch account to get started.</p>
+    <a href="/auth/twitch" class="btn">Connect with Twitch</a>
+  </div>
+</body>
+</html>
+  `;
+
+  const dashboardContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Dashboard - Twitch Joke Bot</title>
+  <style>
+    body { font-family: Arial, sans-serif; background-color: #f0e6ff; text-align: center; padding: 50px; }
+    .card { background: white; border-radius: 10px; padding: 30px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); max-width: 600px; margin: 0 auto; }
+    h1 { color: #6610f2; }
+    .btn { background-color: #8a4bf5; color: white; border: none; padding: 10px 20px; border-radius: 5px; text-decoration: none; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Dashboard</h1>
+    <p>This is a minimal dashboard for the Twitch Joke Bot.</p>
+    <p>We're having some technical difficulties with the full dashboard.</p>
+    <p>Please try again later.</p>
+    <a href="/logout" class="btn">Logout</a>
+  </div>
+</body>
+</html>
+  `;
+
+  // Write files directly to the filesystem
+  try {
+    fs.writeFileSync(path.join(process.cwd(), 'index.html'), indexContent);
+    fs.writeFileSync(path.join(process.cwd(), 'dashboard.html'), dashboardContent);
+    console.log('Created fallback HTML files');
+  } catch (error) {
+    console.error('Error creating fallback HTML files:', error);
+  }
+};
+
+// Create fallback HTML files
+createHtmlFiles();
+
+// Serve static files from multiple possible locations
+app.use(express.static(process.cwd())); // Root directory
+app.use('/src', express.static(path.join(process.cwd(), 'src'))); // src directory
 app.use(express.json());
 
 // Debug route to check file system
 app.get('/debug', (req, res) => {
   const currentDir = process.cwd();
-  const files = fs.readdirSync(currentDir);
-  
-  // Check various directories
-  const srcExists = fs.existsSync(path.join(currentDir, 'src'));
-  const publicExists = fs.existsSync(path.join(currentDir, 'public'));
-  const srcDirExists = fs.existsSync(__dirname);
-  
-  let srcFiles = [];
-  let publicFiles = [];
-  let currentDirFiles = [];
-  
-  if (srcExists) {
-    srcFiles = fs.readdirSync(path.join(currentDir, 'src'));
-  }
-  
-  if (publicExists) {
-    publicFiles = fs.readdirSync(path.join(currentDir, 'public'));
-  }
-  
-  if (srcDirExists) {
-    currentDirFiles = fs.readdirSync(__dirname);
-  }
-  
-  res.json({
+  let result = {
     currentDir,
-    files,
-    srcExists,
-    srcFiles,
-    publicExists,
-    publicFiles,
     dirname: __dirname,
-    dirnameExists: srcDirExists,
-    dirnameFiles: currentDirFiles,
+    files: {
+      currentDir: fs.readdirSync(currentDir),
+    },
+    exists: {
+      index_root: fs.existsSync(path.join(currentDir, 'index.html')),
+      dashboard_root: fs.existsSync(path.join(currentDir, 'dashboard.html')),
+      src_folder: fs.existsSync(path.join(currentDir, 'src')),
+    },
     env: {
       NODE_ENV: process.env.NODE_ENV,
       PORT: process.env.PORT,
-      MONGODB_URI: process.env.MONGODB_URI ? 'Set (hidden for security)' : 'Not set',
-      TWITCH_CLIENT_ID: process.env.TWITCH_CLIENT_ID ? 'Set (hidden for security)' : 'Not set',
-      CALLBACK_URL: process.env.CALLBACK_URL ? 'Set (hidden for security)' : 'Not set',
-      BOT_USERNAME: process.env.BOT_USERNAME || 'Not set'
+      MONGODB_URI: process.env.MONGODB_URI ? 'Set (hidden)' : 'Not set',
+      TWITCH_CLIENT_ID: process.env.TWITCH_CLIENT_ID ? 'Set (hidden)' : 'Not set',
+      CALLBACK_URL: process.env.CALLBACK_URL ? 'Set (hidden)' : 'Not set',
     }
-  });
+  };
+  
+  // Check src directory if it exists
+  if (result.exists.src_folder) {
+    const srcDir = path.join(currentDir, 'src');
+    result.files.srcDir = fs.readdirSync(srcDir);
+    result.exists.index_src = fs.existsSync(path.join(srcDir, 'index.html'));
+    result.exists.dashboard_src = fs.existsSync(path.join(srcDir, 'dashboard.html'));
+  }
+  
+  res.json(result);
 });
 
 // Routes
 app.get('/', (req, res) => {
-  // Try multiple locations to find the file
-  const possiblePaths = [
-    path.join(__dirname, 'index.html'),
-    path.join(process.cwd(), 'src', 'index.html'),
-    path.join(process.cwd(), 'public', 'index.html')
-  ];
-  
-  for (const filePath of possiblePaths) {
-    if (fs.existsSync(filePath)) {
-      console.log('Found index.html at:', filePath);
-      return res.sendFile(filePath);
-    }
-  }
-  
-  res.status(404).send('index.html not found. Please check your file structure.');
+  console.log('Serving index page');
+  res.sendFile(path.join(process.cwd(), 'index.html'));
 });
 
 // Auth routes
@@ -176,21 +217,8 @@ app.get('/auth/twitch/callback',
 );
 
 app.get('/dashboard', ensureAuthenticated, (req, res) => {
-  // Try multiple locations to find the file
-  const possiblePaths = [
-    path.join(__dirname, 'dashboard.html'),
-    path.join(process.cwd(), 'src', 'dashboard.html'),
-    path.join(process.cwd(), 'public', 'dashboard.html')
-  ];
-  
-  for (const filePath of possiblePaths) {
-    if (fs.existsSync(filePath)) {
-      console.log('Found dashboard.html at:', filePath);
-      return res.sendFile(filePath);
-    }
-  }
-  
-  res.status(404).send('dashboard.html not found. Please check your file structure.');
+  console.log('Serving dashboard page');
+  res.sendFile(path.join(process.cwd(), 'dashboard.html'));
 });
 
 app.get('/api/user', ensureAuthenticated, (req, res) => {
