@@ -125,18 +125,46 @@ const createHtmlFiles = () => {
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Twitch Joke Bot</title>
+  <title>GiggleByte - Twitch Joke Bot</title>
   <style>
-    body { font-family: Arial, sans-serif; background-color: #f0e6ff; text-align: center; padding: 50px; }
-    .card { background: white; border-radius: 10px; padding: 30px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); max-width: 600px; margin: 0 auto; }
-    h1 { color: #6610f2; }
-    .btn { background-color: #8a4bf5; color: white; border: none; padding: 10px 20px; border-radius: 5px; text-decoration: none; font-weight: bold; display: inline-block; margin-top: 20px; }
+    body { 
+      font-family: Arial, sans-serif; 
+      background-color: #f0e6ff; 
+      text-align: center; 
+      padding: 50px; 
+    }
+    .card { 
+      background: white; 
+      border-radius: 10px; 
+      padding: 30px; 
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1); 
+      max-width: 600px; 
+      margin: 0 auto; 
+    }
+    h1 { 
+      background: linear-gradient(45deg, #ff66c4, #8a4bf5, #66d9ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      font-weight: bold;
+    }
+    .btn { 
+      background-color: #8a4bf5; 
+      color: white; 
+      border: none; 
+      padding: 10px 20px; 
+      border-radius: 5px; 
+      text-decoration: none; 
+      font-weight: bold; 
+      display: inline-block; 
+      margin-top: 20px; 
+    }
   </style>
 </head>
 <body>
   <div class="card">
-    <h1>Twitch Joke Bot</h1>
-    <p>Let your viewers enjoy jokes without any technical setup!</p>
+    <h1>GiggleByte</h1>
+    <p>The Twitch joke bot that brings laughter to your channel!</p>
     <p>Connect your Twitch account to get started.</p>
     <a href="/auth/twitch" class="btn">Connect with Twitch</a>
   </div>
@@ -148,22 +176,105 @@ const createHtmlFiles = () => {
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Dashboard - Twitch Joke Bot</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GiggleByte Dashboard</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
-    body { font-family: Arial, sans-serif; background-color: #f0e6ff; text-align: center; padding: 50px; }
-    .card { background: white; border-radius: 10px; padding: 30px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); max-width: 600px; margin: 0 auto; }
-    h1 { color: #6610f2; }
-    .btn { background-color: #8a4bf5; color: white; border: none; padding: 10px 20px; border-radius: 5px; text-decoration: none; font-weight: bold; display: inline-block; margin-top: 20px; }
+    :root {
+      --pink: #ff66c4;
+      --purple: #8a4bf5;
+      --blue: #66d9ff;
+      --light-purple: #f0e6ff;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: var(--light-purple);
+      color: #333;
+    }
+    
+    .navbar {
+      background: linear-gradient(90deg, var(--pink), var(--purple), var(--blue));
+    }
+    
+    .card {
+      border-radius: 15px;
+      border: none;
+      box-shadow: 0 6px 15px rgba(138, 75, 245, 0.15);
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+    
+    .card-header {
+      background: white;
+      border-bottom: 1px solid rgba(138, 75, 245, 0.2);
+      font-weight: 600;
+      color: var(--purple);
+    }
+    
+    .gradient-text {
+      background: linear-gradient(45deg, var(--pink), var(--purple), var(--blue));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      font-weight: bold;
+    }
+    
+    .btn-primary {
+      background: var(--purple);
+      border-color: var(--purple);
+      box-shadow: 0 4px 10px rgba(138, 75, 245, 0.3);
+      transition: all 0.2s;
+    }
+    
+    .btn-primary:hover {
+      background: #7c3ade;
+      border-color: #7c3ade;
+      transform: translateY(-2px);
+    }
   </style>
 </head>
 <body>
-  <div class="card">
-    <h1>Dashboard</h1>
-    <p>This is a minimal dashboard for the Twitch Joke Bot.</p>
-    <p>We're having some technical difficulties with the full dashboard.</p>
-    <p>Please try again later.</p>
-    <a href="/logout" class="btn">Logout</a>
+  <nav class="navbar navbar-dark">
+    <div class="container">
+      <a class="navbar-brand" href="/">
+        <span style="font-size: 1.5rem; font-weight: bold;">🤖 GiggleByte</span>
+      </a>
+      <div class="d-flex align-items-center">
+        <a href="/logout" class="btn btn-sm btn-light">Log out</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container my-4">
+    <div class="row">
+      <div class="col-12 mb-4 text-center">
+        <h1 class="display-5 gradient-text">GiggleByte Dashboard</h1>
+        <p class="lead">Your Twitch joke bot is connected and ready to bring laughter to your channel!</p>
+      </div>
+    </div>
+
+    <div class="row mb-4">
+      <div class="col-md-6 mx-auto">
+        <div class="card h-100">
+          <div class="card-header">Bot Status</div>
+          <div class="card-body d-flex flex-column align-items-center text-center">
+            <div class="mb-3">
+              <p>GiggleByte is now active on your Twitch channel!</p>
+              <p>Viewers can use <strong>!joke</strong> to get a random joke.</p>
+            </div>
+            
+            <div class="mt-auto">
+              <a href="/logout" class="btn btn-primary">Logout</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
   `;
@@ -225,6 +336,16 @@ app.get('/debug', (req, res) => {
 // Routes
 app.get('/', (req, res) => {
   console.log('Serving index page');
+  
+  // Try to serve index.html from src directory first
+  const srcIndexPath = path.join(process.cwd(), 'src', 'index.html');
+  if (fs.existsSync(srcIndexPath)) {
+    console.log('Found index.html in src directory');
+    return res.sendFile(srcIndexPath);
+  }
+  
+  // Fallback to root index.html
+  console.log('Using fallback index.html from root directory');
   res.sendFile(path.join(process.cwd(), 'index.html'));
 });
 
@@ -239,7 +360,17 @@ app.get('/auth/twitch/callback',
 );
 
 app.get('/dashboard', ensureAuthenticated, (req, res) => {
-  console.log('Serving dashboard page');
+  console.log('Trying to serve dashboard from src folder');
+  
+  // Try to serve dashboard.html from src directory first
+  const srcDashboardPath = path.join(process.cwd(), 'src', 'dashboard.html');
+  if (fs.existsSync(srcDashboardPath)) {
+    console.log('Found dashboard.html in src folder');
+    return res.sendFile(srcDashboardPath);
+  }
+  
+  // Fallback to root dashboard.html
+  console.log('Falling back to root dashboard.html');
   res.sendFile(path.join(process.cwd(), 'dashboard.html'));
 });
 
