@@ -58,13 +58,26 @@ passport.deserializeUser((id, done) => {
   });
 });
 
+// Check for environment variables and log their presence
+console.log('Environment variables check:');
+console.log('TWITCH_CLIENT_ID:', process.env.TWITCH_CLIENT_ID ? 'Set' : 'Not set');
+console.log('TWITCH_CLIENT_SECRET:', process.env.TWITCH_CLIENT_SECRET ? 'Set' : 'Not set');
+console.log('CALLBACK_URL:', process.env.CALLBACK_URL ? 'Set' : 'Not set');
+console.log('CALLBACK_URL_L:', process.env.CALLBACK_URL_L ? 'Set' : 'Not set');
+console.log('SESSION_SECRET:', process.env.SESSION_SECRET ? 'Set' : 'Not set');
+console.log('BOT_USERNAME:', process.env.BOT_USERNAME ? 'Set' : 'Not set');
+
+// Hard-coded callback URL that matches exactly what's registered on Twitch
+const CALLBACK_URL = 'https://twitch-joke-bot.onrender.com/auth/twitch/callback';
+
 // Twitch OAuth2 Strategy
 passport.use(new OAuth2Strategy({
   authorizationURL: 'https://id.twitch.tv/oauth2/authorize',
   tokenURL: 'https://id.twitch.tv/oauth2/token',
   clientID: process.env.TWITCH_CLIENT_ID,
   clientSecret: process.env.TWITCH_CLIENT_SECRET,
-  callbackURL: process.env.CALLBACK_URL || 'http://localhost:3000/auth/twitch/callback',
+  // Use the hard-coded callback URL to ensure it matches exactly
+  callbackURL: CALLBACK_URL,
   scope: 'chat:read chat:edit channel:moderate'
 }, async (accessToken, refreshToken, profile, done) => {
   try {
@@ -79,6 +92,8 @@ passport.use(new OAuth2Strategy({
     const twitchId = userInfo.data.data[0].id;
     const username = userInfo.data.data[0].login;
     
+    console.log(`User authenticated: ${username} (${twitchId})`);
+    
     // Find or create user
     let user = await User.findOne({ twitchId });
     if (!user) {
@@ -88,9 +103,11 @@ passport.use(new OAuth2Strategy({
         accessToken,
         refreshToken
       });
+      console.log(`Created new user: ${username}`);
     } else {
       user.accessToken = accessToken;
       user.refreshToken = refreshToken;
+      console.log(`Updated existing user: ${username}`);
     }
     
     await user.save();
@@ -113,7 +130,7 @@ const createHtmlFiles = () => {
     body { font-family: Arial, sans-serif; background-color: #f0e6ff; text-align: center; padding: 50px; }
     .card { background: white; border-radius: 10px; padding: 30px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); max-width: 600px; margin: 0 auto; }
     h1 { color: #6610f2; }
-    .btn { background-color: #8a4bf5; color: white; border: none; padding: 10px 20px; border-radius: 5px; text-decoration: none; font-weight: bold; }
+    .btn { background-color: #8a4bf5; color: white; border: none; padding: 10px 20px; border-radius: 5px; text-decoration: none; font-weight: bold; display: inline-block; margin-top: 20px; }
   </style>
 </head>
 <body>
@@ -136,7 +153,7 @@ const createHtmlFiles = () => {
     body { font-family: Arial, sans-serif; background-color: #f0e6ff; text-align: center; padding: 50px; }
     .card { background: white; border-radius: 10px; padding: 30px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); max-width: 600px; margin: 0 auto; }
     h1 { color: #6610f2; }
-    .btn { background-color: #8a4bf5; color: white; border: none; padding: 10px 20px; border-radius: 5px; text-decoration: none; font-weight: bold; }
+    .btn { background-color: #8a4bf5; color: white; border: none; padding: 10px 20px; border-radius: 5px; text-decoration: none; font-weight: bold; display: inline-block; margin-top: 20px; }
   </style>
 </head>
 <body>
@@ -189,6 +206,8 @@ app.get('/debug', (req, res) => {
       MONGODB_URI: process.env.MONGODB_URI ? 'Set (hidden)' : 'Not set',
       TWITCH_CLIENT_ID: process.env.TWITCH_CLIENT_ID ? 'Set (hidden)' : 'Not set',
       CALLBACK_URL: process.env.CALLBACK_URL ? 'Set (hidden)' : 'Not set',
+      CALLBACK_URL_L: process.env.CALLBACK_URL_L ? 'Set (hidden)' : 'Not set',
+      hardcoded_callback: CALLBACK_URL
     }
   };
   
@@ -213,7 +232,10 @@ app.get('/', (req, res) => {
 app.get('/auth/twitch', passport.authenticate('oauth2'));
 app.get('/auth/twitch/callback', 
   passport.authenticate('oauth2', { failureRedirect: '/' }),
-  (req, res) => res.redirect('/dashboard')
+  (req, res) => {
+    console.log('Authentication successful, redirecting to dashboard');
+    res.redirect('/dashboard');
+  }
 );
 
 app.get('/dashboard', ensureAuthenticated, (req, res) => {
