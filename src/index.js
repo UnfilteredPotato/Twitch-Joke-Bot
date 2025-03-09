@@ -1,4 +1,4 @@
-// server.js - Main server file for the joke bot web application
+// Main server file for the joke bot web application
 const express = require('express');
 const session = require('express-session');
 const passport = require('passport');
@@ -6,8 +6,15 @@ const OAuth2Strategy = require('passport-oauth2');
 const tmi = require('tmi.js');
 const axios = require('axios');
 const mongoose = require('mongoose');
+const fs = require('fs');
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Log the current directory and files for debugging
+console.log('Current directory:', process.cwd());
+console.log('Files in root:', fs.readdirSync('.'));
+console.log('Files in src:', fs.existsSync('./src') ? fs.readdirSync('./src') : 'src folder not found');
+console.log('Files in src/public:', fs.existsSync('./src/public') ? fs.readdirSync('./src/public') : 'src/public folder not found');
 
 // MongoDB connection
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost/twitchjokebot')
@@ -93,12 +100,39 @@ passport.use(new OAuth2Strategy({
 }));
 
 // Serve static files
-app.use(express.static('public'));
+app.use(express.static('src/public'));
 app.use(express.json());
+
+// Debug route to check file system
+app.get('/debug', (req, res) => {
+  const currentDir = process.cwd();
+  const files = fs.readdirSync(currentDir);
+  const srcExists = fs.existsSync('./src');
+  const publicExists = fs.existsSync('./src/public');
+  let srcFiles = [];
+  let publicFiles = [];
+  
+  if (srcExists) {
+    srcFiles = fs.readdirSync('./src');
+  }
+  
+  if (publicExists) {
+    publicFiles = fs.readdirSync('./src/public');
+  }
+  
+  res.json({
+    currentDir,
+    files,
+    srcExists,
+    srcFiles,
+    publicExists,
+    publicFiles
+  });
+});
 
 // Routes
 app.get('/', (req, res) => {
-  res.sendFile('index.html', { root: 'public' });
+  res.sendFile('index.html', { root: 'src/public' });
 });
 
 // Auth routes
@@ -109,7 +143,7 @@ app.get('/auth/twitch/callback',
 );
 
 app.get('/dashboard', ensureAuthenticated, (req, res) => {
-  res.sendFile('dashboard.html', { root: 'public' });
+  res.sendFile('dashboard.html', { root: 'src/public' });
 });
 
 app.get('/api/user', ensureAuthenticated, (req, res) => {
