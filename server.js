@@ -6,7 +6,6 @@ const OAuth2Strategy = require('passport-oauth2');
 const tmi = require('tmi.js');
 const axios = require('axios');
 const mongoose = require('mongoose');
-const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -93,20 +92,13 @@ passport.use(new OAuth2Strategy({
   }
 }));
 
-// Serve static files from the public directory
-app.use(express.static(path.join(__dirname, 'public')));
+// Serve static files
+app.use(express.static('public'));
 app.use(express.json());
-
-// Log the current directory and files for debugging
-console.log('Current directory:', __dirname);
-console.log('Files in public:', require('fs').existsSync(path.join(__dirname, 'public')));
 
 // Routes
 app.get('/', (req, res) => {
-  // Use path.join for cross-platform compatibility
-  const indexPath = path.join(__dirname, 'public', 'index.html');
-  console.log('Serving index from:', indexPath);
-  res.sendFile(indexPath);
+  res.sendFile('index.html', { root: 'public' });
 });
 
 // Auth routes
@@ -117,9 +109,7 @@ app.get('/auth/twitch/callback',
 );
 
 app.get('/dashboard', ensureAuthenticated, (req, res) => {
-  const dashboardPath = path.join(__dirname, 'public', 'dashboard.html');
-  console.log('Serving dashboard from:', dashboardPath);
-  res.sendFile(dashboardPath);
+  res.sendFile('dashboard.html', { root: 'public' });
 });
 
 app.get('/api/user', ensureAuthenticated, (req, res) => {
